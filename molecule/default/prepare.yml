@@ -1,0 +1,9 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: install python if it absent on target node
+      ansible.builtin.raw: python3 -V || python -V #apt -y update && apt install -y python3-pip
+      become: true
+      changed_when: false

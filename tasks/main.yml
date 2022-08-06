@@ -1,2 +1,112 @@
 ---
 # tasks file for prometheus_role
+
+- name: Create a Prometheus group
+  ansible.builtin.group:
+    name: "{{ prometheus_group }}"
+    state: present
+  become: true
+
+- name: Create a Prometheus user
+  ansible.builtin.user:
+    name: "{{ prometheus_user }}"
+    shell: /sbin/nologin
+    groups: "{{ prometheus_group }}"
+    home: "{{ prometheus_bin_dir }}"
+  become: true
+
+- name: Create a directory for Prometheus
+  become: true
+  ansible.builtin.file:
+    path: "{{ prometheus_bin_dir }}"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+    mode: '0755'
+
+- name: Create a directory for prometheus.yml
+  become: true
+  ansible.builtin.file:
+    path: "{{ prometheus_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create a directory for Prometheus data
+  become: true
+  ansible.builtin.file:
+    path: "{{ prometheus_db_dir }}"
+    state: directory
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+    mode: '0755'
+
+- name: Download Prometheus tar.gz
+  become: true
+  ansible.builtin.get_url:
+    url: https://github.com/prometheus/prometheus/releases/download/v2.37.0/prometheus-2.37.0.linux-amd64.tar.gz
+    dest: /tmp/prometheus-2.37.0.linux-amd64.tar.gz
+    
+    #mode: 0777
+    #check_mode: false
+
+- name: Unarchive Prometheus binary file
+  become: true
+  ansible.builtin.unarchive:
+    src: /tmp/prometheus-2.37.0.linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+    #check_mode: false
+# - name: Download and unpack Prometheus binary file
+#   ansible.builtin.unarchive:
+#     src: https://github.com/prometheus/prometheus/releases/download/v2.37.0/prometheus-2.37.0.linux-amd64.tar.gz
+#     dest: /opt/prometheus/
+#     remote_src: yes
+- name: Copy Prometheus binaries
+  become: true
+  ansible.builtin.copy:
+    remote_src: yes
+    src: /tmp/prometheus-2.37.0.linux-amd64/{{item}}
+    dest: "{{ prometheus_bin_dir }}"
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+    mode: u=rwx,g=rx,o=rx
+  with_items: 
+    ['prometheus', 'promtool']
+
+- name: Copy Prometheus libs and consoles files
+  become: true
+  ansible.builtin.copy:
+    remote_src: yes
+    src: /tmp/prometheus-2.37.0.linux-amd64/{{item}}
+    dest: /opt/prometheus/
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+  with_items: ['console_libraries', 'consoles']
+
+- name: Copy Prometheus configuration file
+  become: true
+  ansible.builtin.copy:
+    remote_src: yes
+    src: /tmp/prometheus-2.37.0.linux-amd64/prometheus.yml
+    dest: "{{ prometheus_config_dir }}/prometheus.yml"
+    owner: "{{ prometheus_user }}"
+    group: "{{ prometheus_group }}"
+
+
+- name: Create systemd unit file
+  become: true
+  ansible.builtin.template:
+    src: prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Enable service unit prometheus
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: prometheus
+    state: started
+    enabled: true
+

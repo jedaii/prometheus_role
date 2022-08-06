@@ -1,6 +1,7 @@
 ---
 - name: Converge
   hosts: all
+  debugger: on_failed
   tasks:
     - name: "Include acme.prometheus_role"
       include_role:
