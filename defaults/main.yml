@@ -5,3 +5,8 @@ prometheus_config_dir: /etc/prometheus/
 prometheus_user: prometheus
 prometheus_group: prometheus
 prometheus_bin_dir: /opt/prometheus
+
+prometheus_scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

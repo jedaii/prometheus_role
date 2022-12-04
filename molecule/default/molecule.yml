@@ -8,16 +8,6 @@ driver:
 platforms:
   - name: instance
     box: bento/ubuntu-20.04
-# driver:
-#   name: docker
-# platforms:
-#   - name: instance
-#     image: quay.io/paulfantom/molecule-systemd:ubuntu-18.04
-#     docker_host: "${DOCKER_HOST:-unix://var/run/docker.sock}"
-#     pre_build_image: true
-#     privileged: true
-#     volumes:
-#       - /sys/fs/cgroup:/sys/fs/cgroup:ro
 provisioner:
   name: ansible
 verifier:

@@ -83,16 +83,6 @@
     group: "{{ prometheus_group }}"
   with_items: ['console_libraries', 'consoles']
 
-- name: Copy Prometheus configuration file
-  become: true
-  ansible.builtin.copy:
-    remote_src: yes
-    src: /tmp/prometheus-2.37.0.linux-amd64/prometheus.yml
-    dest: "{{ prometheus_config_dir }}/prometheus.yml"
-    owner: "{{ prometheus_user }}"
-    group: "{{ prometheus_group }}"
-
-
 - name: Create systemd unit file
   become: true
   ansible.builtin.template:
@@ -102,7 +92,16 @@
     group: root
     mode: 0644
 
-- name: Enable service unit prometheus
+- name: Create Prometheus configuration file
+  become: true
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Ensure service prometheus is enabled and started
   become: true
   ansible.builtin.systemd:
     daemon_reload: true
