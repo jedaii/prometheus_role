@@ -20,4 +20,4 @@ rule_files:
 # Here it's Prometheus itself.
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-"{{ prometheus_scrape_configs | to_nice_yaml(indent=2) }}"
+{{ prometheus_scrape_configs | to_nice_yaml(indent=2) }}
